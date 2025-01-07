@@ -10,8 +10,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/material": "^6.3.1",
+    "prettier": "^3.4.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
+  },
+  "prettier": {
+    "tabWidth": 4,
+    "semi": false,
+    "singleQuote": true
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
