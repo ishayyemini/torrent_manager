@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Home from './Home.tsx'
 
 function App() {
-    const [loggedIn, toggleLoggedIn] = useState(false)
+    const [loggedIn, toggleLoggedIn] = useState(true)
 
     return (
         <>
