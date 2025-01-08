@@ -8,6 +8,8 @@ import {
     MOVIES_DIR,
 } from '../../../conf.json'
 
+// TODO move logic to server, better to hide passwords
+
 export interface BT4GResItem {
     description: string
     guid: string

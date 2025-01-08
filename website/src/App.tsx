@@ -3,6 +3,8 @@ import Login from './Login.tsx'
 import { useState } from 'react'
 import Home from './Home.tsx'
 
+// TODO authentication
+
 function App() {
     const [loggedIn, toggleLoggedIn] = useState(true)
 
