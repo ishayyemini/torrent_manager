@@ -1,3 +1,13 @@
+import Transmission from 'transmission-promise'
+
+import {
+    TRANSMISSION_SERVER,
+    TRANSMISSION_USERNAME,
+    TRANSMISSION_PASSWORD,
+    SHOWS_DIR,
+    MOVIES_DIR,
+} from '../../../conf.json'
+
 export interface BT4GResItem {
     description: string
     guid: string
@@ -11,7 +21,21 @@ export interface SearchOptions {
     quality: '1080p' | '2160p'
 }
 
+export interface Metadata {
+    name: string
+    type: 'show' | 'movie'
+    season?: number
+}
+
 class Torrents {
+    static transmission = new Transmission({
+        host: TRANSMISSION_SERVER,
+        port: 443,
+        username: TRANSMISSION_USERNAME,
+        password: TRANSMISSION_PASSWORD,
+        ssl: true,
+    })
+
     static async findTorrent(
         searchTerm: string,
         searchOptions?: SearchOptions,
@@ -33,6 +57,19 @@ class Torrents {
             { mode: 'cors' },
         )
         return (await res.json()) as BT4GResItem[]
+    }
+
+    static async addTorrent(torrentLink: string, metadata: Metadata) {
+        console.log(metadata)
+        return await this.transmission.addUrl(torrentLink, {
+            'download-dir':
+                (metadata.type == 'show' ? SHOWS_DIR : MOVIES_DIR) +
+                '/' +
+                metadata.name +
+                (metadata.type == 'show'
+                    ? '/Season ' + metadata.season?.toString()
+                    : ''),
+        })
     }
 }
 
