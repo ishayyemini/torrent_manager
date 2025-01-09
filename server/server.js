@@ -73,7 +73,9 @@ app.get('/torrents-api/bt4g', verifyToken, async (req, res) => {
 app.post('/torrents-api/login', async (req, res) => {
     if (!req.body) return res.sendStatus(400)
     const { username, password } = req.body
-    const passwordsMatch = await bcrypt.compare(password, users[username])
+    const passwordsMatch = await bcrypt
+        .compare(password, users[username])
+        .catch(() => false)
     if (!passwordsMatch) {
         res.status(401)
         res.json({ error: 'Authentication failed' })
