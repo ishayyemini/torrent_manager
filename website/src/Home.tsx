@@ -17,11 +17,12 @@ import API, { BT4GResItem, Metadata, SearchOptions } from './API/API.ts'
 
 function Home() {
     const [search, setSearch] = useState('')
-    const [torrent, setTorrent] = useState<BT4GResItem | undefined>()
+    const [torrents, setTorrents] = useState<BT4GResItem[] | undefined>()
     const [searchOptions, setSearchOptions] = useState<SearchOptions>({
         hdr: true,
         quality: '2160p',
     })
+    const [selectedMagnet, setSelectedMagnet] = useState('')
     const [metadata, setMetadata] = useState<Metadata>({
         name: '',
         type: 'movie',
@@ -31,9 +32,11 @@ function Home() {
     const onSearchFormSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
         (e) => {
             e.preventDefault()
-            API.findTorrent(search, searchOptions).then((res) => {
+            API.findTorrents(search, searchOptions).then((res) => {
                 setMetadata((oldMetadata) => {
-                    const se = search.toLowerCase().match(/s\d\de\d\d/i)?.[0]
+                    const se =
+                        search.toLowerCase().match(/s\d\de\d\d/i)?.[0] ||
+                        search.toLowerCase().match(/s\d\d/i)?.[0]
                     oldMetadata.name = (
                         se ? search.replace(' ' + se, '') : search
                     ).replace(
@@ -49,7 +52,8 @@ function Home() {
 
                     return oldMetadata
                 })
-                setTorrent(res)
+                if (res.length == 0) setTorrents(undefined)
+                else setTorrents(res)
             })
         },
         [search, searchOptions],
@@ -58,21 +62,21 @@ function Home() {
     const onApproveFormSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
         (e) => {
             e.preventDefault()
-            if (torrent)
-                API.addTorrent(torrent.link, metadata).then((res) => {
+            if (selectedMagnet != '')
+                API.addTorrent(selectedMagnet, metadata).then((res) => {
                     console.log(res)
-                    setTorrent(undefined)
+                    setTorrents(undefined)
                 })
-            else setTorrent(undefined)
+            else setTorrents(undefined)
         },
-        [metadata, torrent],
+        [metadata, selectedMagnet],
     )
 
     return (
         <>
             <Card>
                 <Box width={'300px'} margin={'12px'}>
-                    {torrent == undefined ? (
+                    {torrents == undefined ? (
                         <>
                             <DialogTitle>Search</DialogTitle>
 
@@ -134,14 +138,30 @@ function Home() {
                         <>
                             <DialogTitle>Approve Torrent</DialogTitle>
 
-                            <Box
-                                margin={'12px'}
-                                style={{ lineBreak: 'anywhere' }}
-                            >
-                                Title: {torrent?.title}
-                            </Box>
-
                             <form onSubmit={onApproveFormSubmit}>
+                                <Box maxHeight={'300px'} overflow={'auto'}>
+                                    <RadioGroup
+                                        name={'selectedMagnet'}
+                                        value={selectedMagnet}
+                                        onChange={(e) =>
+                                            setSelectedMagnet(e.target.value)
+                                        }
+                                        row
+                                    >
+                                        {torrents.map((torrent, index) => (
+                                            <FormControlLabel
+                                                value={torrent.link}
+                                                control={<Radio />}
+                                                label={torrent.title}
+                                                key={index}
+                                                style={{
+                                                    lineBreak: 'anywhere',
+                                                }}
+                                            />
+                                        ))}
+                                    </RadioGroup>
+                                </Box>
+
                                 <TextField
                                     value={metadata.name}
                                     onChange={(e) =>
@@ -217,7 +237,7 @@ function Home() {
                                 >
                                     <Button
                                         type={'reset'}
-                                        onClick={() => setTorrent(undefined)}
+                                        onClick={() => setTorrents(undefined)}
                                     >
                                         Cancel
                                     </Button>

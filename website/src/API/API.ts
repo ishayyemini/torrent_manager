@@ -49,17 +49,17 @@ class API {
         return await res.json()
     }
 
-    static async findTorrent(
+    static async findTorrents(
         searchTerm: string,
         searchOptions?: SearchOptions,
-    ): Promise<BT4GResItem | undefined> {
+    ): Promise<BT4GResItem[]> {
         if (!searchOptions) searchOptions = { hdr: true, quality: '2160p' }
         searchTerm += ' ' + searchOptions.quality
         if (searchOptions.hdr && searchOptions.quality == '2160p')
             searchTerm += ' hdr'
         const res = await this.searchBT4G(searchTerm)
-        if (Array.isArray(res)) return res[0]
-        else return undefined
+        if (Array.isArray(res)) return res
+        else return []
     }
 
     static async searchBT4G(searchTerm: string): Promise<BT4GResItem[]> {
