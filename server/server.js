@@ -46,8 +46,9 @@ app.get('/bt4g', verifyToken, async (req, res) => {
             new URLSearchParams({ q, page: 'rss', orderby: 'seeders' }),
     )
     const parser = new XMLParser()
-    const parsedRes =
+    const parsedRes = (
         parser.parse(await bt4gRes.text())?.rss?.channel?.item ?? []
+    ).filter((item) => item.description.includes('<br>Movie<br>'))
 
     const transmission = new Transmission({
         host: TRANSMISSION_SERVER,
