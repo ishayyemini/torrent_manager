@@ -63,9 +63,9 @@ function Home() {
         (e) => {
             e.preventDefault()
             if (selectedMagnet != '')
-                API.addTorrent(selectedMagnet, metadata).then((res) => {
-                    console.log(res)
+                API.addTorrent(selectedMagnet, metadata).then(() => {
                     setTorrents(undefined)
+                    setSelectedMagnet('')
                 })
             else setTorrents(undefined)
         },
@@ -136,7 +136,7 @@ function Home() {
                         </>
                     ) : (
                         <>
-                            <DialogTitle>Approve Torrent</DialogTitle>
+                            <DialogTitle>Choose Torrent</DialogTitle>
 
                             <form onSubmit={onApproveFormSubmit}>
                                 <Box
@@ -253,7 +253,10 @@ function Home() {
                                 >
                                     <Button
                                         type={'reset'}
-                                        onClick={() => setTorrents(undefined)}
+                                        onClick={() => {
+                                            setTorrents(undefined)
+                                            setSelectedMagnet('')
+                                        }}
                                     >
                                         Cancel
                                     </Button>
