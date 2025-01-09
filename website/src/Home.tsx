@@ -139,7 +139,11 @@ function Home() {
                             <DialogTitle>Approve Torrent</DialogTitle>
 
                             <form onSubmit={onApproveFormSubmit}>
-                                <Box maxHeight={'300px'} overflow={'auto'}>
+                                <Box
+                                    maxHeight={'300px'}
+                                    margin={'0 0 12px 0'}
+                                    overflow={'auto'}
+                                >
                                     <RadioGroup
                                         name={'selectedMagnet'}
                                         value={selectedMagnet}
@@ -152,11 +156,23 @@ function Home() {
                                             <FormControlLabel
                                                 value={torrent.link}
                                                 control={<Radio />}
-                                                label={torrent.title}
+                                                label={
+                                                    <span
+                                                        style={{
+                                                            lineBreak:
+                                                                'anywhere',
+                                                            fontWeight:
+                                                                torrent.link ==
+                                                                selectedMagnet
+                                                                    ? 'bold'
+                                                                    : 'normal',
+                                                        }}
+                                                    >
+                                                        {torrent.title}
+                                                    </span>
+                                                }
                                                 key={index}
-                                                style={{
-                                                    lineBreak: 'anywhere',
-                                                }}
+                                                disabled={torrent.added}
                                             />
                                         ))}
                                     </RadioGroup>

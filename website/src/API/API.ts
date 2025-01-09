@@ -6,6 +6,7 @@ export interface BT4GResItem {
     link: string
     pubDate: string
     title: string
+    added: boolean
 }
 
 export interface SearchOptions {
@@ -63,11 +64,18 @@ class API {
     }
 
     static async searchBT4G(searchTerm: string): Promise<BT4GResItem[]> {
+        const token = localStorage.getItem('token')
+        if (!token) throw new Error('No token')
         const res = await fetch(
             'http://localhost:3000/bt4g' +
                 '?' +
                 new URLSearchParams({ q: searchTerm }),
-            { mode: 'cors' },
+            {
+                mode: 'cors',
+                headers: {
+                    Authorization: token,
+                },
+            },
         )
         return (await res.json()) as BT4GResItem[]
     }
