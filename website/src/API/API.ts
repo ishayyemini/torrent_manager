@@ -1,4 +1,4 @@
-import { SHOWS_DIR, MOVIES_DIR } from '../../../conf.json'
+import { SHOWS_DIR, MOVIES_DIR, JELLYFIN_SERVER } from '../../../conf.json'
 
 export interface BT4GResItem {
     description: string
@@ -22,7 +22,7 @@ export interface Metadata {
 
 class API {
     static async login(username: string, password: string) {
-        const res = await fetch('http://localhost:3000/login', {
+        const res = await fetch(JELLYFIN_SERVER + '/torrents-api/login', {
             body: JSON.stringify({
                 username,
                 password,
@@ -41,7 +41,7 @@ class API {
     static async user(): Promise<{ username: string }> {
         const token = localStorage.getItem('token')
         if (!token) throw new Error('No token')
-        const res = await fetch('http://localhost:3000/user', {
+        const res = await fetch(JELLYFIN_SERVER + '/torrents-api/user', {
             headers: {
                 Authorization: token,
             },
@@ -67,7 +67,8 @@ class API {
         const token = localStorage.getItem('token')
         if (!token) throw new Error('No token')
         const res = await fetch(
-            'http://localhost:3000/bt4g' +
+            JELLYFIN_SERVER +
+                '/torrents-api/bt4g' +
                 '?' +
                 new URLSearchParams({ q: searchTerm }),
             {
@@ -83,7 +84,7 @@ class API {
     static async addTorrent(torrentLink: string, metadata: Metadata) {
         const token = localStorage.getItem('token')
         if (!token) throw new Error('No token')
-        const res = await fetch('http://localhost:3000/add-torrent', {
+        const res = await fetch(JELLYFIN_SERVER + '/torrents-api/add-torrent', {
             body: JSON.stringify({
                 magnet: torrentLink,
                 downloadDir:

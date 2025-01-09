@@ -37,7 +37,7 @@ app.get('/torrents-api', (req, res) => {
     res.send('Express + TypeScript Server')
 })
 
-app.get('/bt4g', verifyToken, async (req, res) => {
+app.get('/torrents-api/bt4g', verifyToken, async (req, res) => {
     const { q } = req.query
 
     const bt4gRes = await fetch(
@@ -70,7 +70,7 @@ app.get('/bt4g', verifyToken, async (req, res) => {
     )
 })
 
-app.post('/login', async (req, res) => {
+app.post('/torrents-api/login', async (req, res) => {
     if (!req.body) return res.sendStatus(400)
     const { username, password } = req.body
     const passwordsMatch = await bcrypt.compare(password, users[username])
@@ -86,11 +86,11 @@ app.post('/login', async (req, res) => {
     }
 })
 
-app.get('/user', verifyToken, (req, res) => {
+app.get('/torrents-api/user', verifyToken, (req, res) => {
     res.json({ username: req.username })
 })
 
-app.post('/add-torrent', verifyToken, async (req, res) => {
+app.post('/torrents-api/add-torrent', verifyToken, async (req, res) => {
     if (!req.body) return res.sendStatus(400)
     const { magnet, downloadDir } = req.body
     const transmission = new Transmission({
