@@ -37,11 +37,15 @@ app.get('/', (req, res) => {
     res.send('Express + TypeScript Server')
 })
 
+// TODO maybe filter already added torrents?
+
 app.get('/bt4g', async (req, res) => {
     const { q } = req.query
 
     const bt4gRes = await fetch(
-        BT4G_SERVER + '?' + new URLSearchParams({ q, page: 'rss' }),
+        BT4G_SERVER +
+            '?' +
+            new URLSearchParams({ q, page: 'rss', orderby: 'seeders' }),
     )
     const parser = new XMLParser()
     const parsedRes = parser.parse(await bt4gRes.text()).rss.channel.item
