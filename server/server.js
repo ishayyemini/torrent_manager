@@ -37,9 +37,7 @@ app.get('/', (req, res) => {
     res.send('Express + TypeScript Server')
 })
 
-// TODO maybe filter already added torrents?
-
-app.get('/bt4g', async (req, res) => {
+app.get('/bt4g', verifyToken, async (req, res) => {
     const { q } = req.query
 
     const bt4gRes = await fetch(
@@ -48,10 +46,27 @@ app.get('/bt4g', async (req, res) => {
             new URLSearchParams({ q, page: 'rss', orderby: 'seeders' }),
     )
     const parser = new XMLParser()
-    const parsedRes = parser.parse(await bt4gRes.text()).rss.channel.item
+    const parsedRes =
+        parser.parse(await bt4gRes.text())?.rss?.channel?.item ?? []
+
+    const transmission = new Transmission({
+        host: TRANSMISSION_SERVER,
+        port: 443,
+        username: TRANSMISSION_USERNAME,
+        password: TRANSMISSION_PASSWORD,
+        ssl: true,
+    })
+    const alreadyAdded = await transmission
+        .get(undefined, ['magnetLink'])
+        .then((res) => res.torrents.map((item) => item.magnetLink))
 
     res.status(200)
-    res.json(parsedRes || [])
+    res.json(
+        parsedRes.map((item) => ({
+            ...item,
+            added: alreadyAdded.includes(item.link),
+        })),
+    )
 })
 
 app.post('/login', async (req, res) => {
