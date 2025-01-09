@@ -33,7 +33,7 @@ function verifyToken(req, res, next) {
     }
 }
 
-app.get('/', (req, res) => {
+app.get('/torrents-api', (req, res) => {
     res.send('Express + TypeScript Server')
 })
 
