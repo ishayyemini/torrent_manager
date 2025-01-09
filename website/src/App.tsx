@@ -6,7 +6,9 @@ import Home from './Home.tsx'
 // TODO authentication
 
 function App() {
-    const [loggedIn, toggleLoggedIn] = useState(true)
+    const [loggedIn, toggleLoggedIn] = useState(
+        localStorage.getItem('token') != null,
+    )
 
     return (
         <>

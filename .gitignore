@@ -27,3 +27,4 @@ server/node_modules
 
 website/src/conf.json
 conf.json
+users.json

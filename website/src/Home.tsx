@@ -13,11 +13,7 @@ import {
     TextField,
 } from '@mui/material'
 
-import Torrents, {
-    BT4GResItem,
-    Metadata,
-    SearchOptions,
-} from './API/torrents.ts'
+import API, { BT4GResItem, Metadata, SearchOptions } from './API/API.ts'
 
 function Home() {
     const [search, setSearch] = useState('')
@@ -35,7 +31,7 @@ function Home() {
     const onSearchFormSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
         (e) => {
             e.preventDefault()
-            Torrents.findTorrent(search, searchOptions).then((res) => {
+            API.findTorrent(search, searchOptions).then((res) => {
                 setMetadata((oldMetadata) => {
                     const se = search.toLowerCase().match(/s\d\de\d\d/i)?.[0]
                     oldMetadata.name = (
@@ -63,7 +59,7 @@ function Home() {
         (e) => {
             e.preventDefault()
             if (torrent)
-                Torrents.addTorrent(torrent.link, metadata).then((res) => {
+                API.addTorrent(torrent.link, metadata).then((res) => {
                     console.log(res)
                     setTorrent(undefined)
                 })

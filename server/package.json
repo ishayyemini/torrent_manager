@@ -4,9 +4,15 @@
   "version": "0.0.0",
   "scripts": {},
   "dependencies": {
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "express": "^4.21.2",
-    "fast-xml-parser": "^4.5.1"
+    "express-session": "^1.18.1",
+    "fast-xml-parser": "^4.5.1",
+    "jsonwebtoken": "^9.0.2",
+    "passport": "^0.7.0",
+    "transmission-promise": "^1.1.7"
   },
   "prettier": {
     "tabWidth": 4,
