@@ -78,6 +78,8 @@ class API {
                 },
             },
         )
+        if (res.status != 200)
+            throw new Error(await res.json().then((x) => x.error))
         return (await res.json()) as BT4GResItem[]
     }
 
@@ -101,7 +103,8 @@ class API {
             },
             method: 'post',
         })
-        if (res.status != 200) throw new Error('User error')
+        if (res.status != 200)
+            throw new Error(await res.json().then((x) => x.error))
         return await res.json()
     }
 }

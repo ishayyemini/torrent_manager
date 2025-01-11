@@ -15,7 +15,11 @@ import {
 
 import API, { BT4GResItem, Metadata, SearchOptions } from './API/API.ts'
 
-function Home() {
+interface HomeProps {
+    logout: () => void
+}
+
+function Home({ logout }: HomeProps) {
     const [search, setSearch] = useState('')
     const [torrents, setTorrents] = useState<BT4GResItem[] | undefined>()
     const [searchOptions, setSearchOptions] = useState<SearchOptions>({
@@ -32,29 +36,34 @@ function Home() {
     const onSearchFormSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
         (e) => {
             e.preventDefault()
-            API.findTorrents(search, searchOptions).then((res) => {
-                setMetadata((oldMetadata) => {
-                    const se =
-                        search.toLowerCase().match(/s\d\de\d\d/i)?.[0] ||
-                        search.toLowerCase().match(/s\d\d/i)?.[0]
-                    oldMetadata.name = (
-                        se ? search.replace(' ' + se, '') : search
-                    ).replace(
-                        /\w\S*/g,
-                        (text) =>
-                            text.charAt(0).toUpperCase() +
-                            text.substring(1).toLowerCase(),
-                    )
-                    oldMetadata.type = se ? 'show' : 'movie'
-                    oldMetadata.season = se
-                        ? parseInt(se.slice(1, 3))
-                        : undefined
+            API.findTorrents(search, searchOptions)
+                .then((res) => {
+                    setMetadata((oldMetadata) => {
+                        const se =
+                            search.toLowerCase().match(/s\d\de\d\d/i)?.[0] ||
+                            search.toLowerCase().match(/s\d\d/i)?.[0]
+                        oldMetadata.name = (
+                            se ? search.replace(' ' + se, '') : search
+                        ).replace(
+                            /\w\S*/g,
+                            (text) =>
+                                text.charAt(0).toUpperCase() +
+                                text.substring(1).toLowerCase(),
+                        )
+                        oldMetadata.type = se ? 'show' : 'movie'
+                        oldMetadata.season = se
+                            ? parseInt(se.slice(1, 3))
+                            : undefined
 
-                    return oldMetadata
+                        return oldMetadata
+                    })
+                    if (res.length == 0) setTorrents(undefined)
+                    else setTorrents(res)
                 })
-                if (res.length == 0) setTorrents(undefined)
-                else setTorrents(res)
-            })
+                .catch((err) => {
+                    console.log(err)
+                    if (err.message == 'Invalid token') logout()
+                })
         },
         [search, searchOptions],
     )
@@ -63,10 +72,14 @@ function Home() {
         (e) => {
             e.preventDefault()
             if (selectedMagnet != '')
-                API.addTorrent(selectedMagnet, metadata).then(() => {
-                    setTorrents(undefined)
-                    setSelectedMagnet('')
-                })
+                API.addTorrent(selectedMagnet, metadata)
+                    .then(() => {
+                        setTorrents(undefined)
+                        setSelectedMagnet('')
+                    })
+                    .catch((err) => {
+                        if (err.message == 'Invalid token') logout()
+                    })
             else setTorrents(undefined)
         },
         [metadata, selectedMagnet],
