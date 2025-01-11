@@ -44,7 +44,11 @@ app.get('/torrents-api/bt4g', verifyToken, async (req, res) => {
         BT4G_SERVER +
             '?' +
             new URLSearchParams({ q, page: 'rss', orderby: 'seeders' }),
-    )
+    ).catch(() => ({ error: 'Failed to fetch torrents' }))
+    if (bt4gRes.status !== 200)
+        return res
+            .status(bt4gRes.status)
+            .json({ error: 'Failed to fetch torrents' })
     const parser = new XMLParser()
     const parsedRes = (
         parser.parse(await bt4gRes.text())?.rss?.channel?.item ?? []
@@ -60,6 +64,7 @@ app.get('/torrents-api/bt4g', verifyToken, async (req, res) => {
     const alreadyAdded = await transmission
         .get(undefined, ['magnetLink'])
         .then((res) => res.torrents.map((item) => item.magnetLink))
+        .catch(() => [])
 
     res.status(200)
     res.json(
@@ -73,6 +78,8 @@ app.get('/torrents-api/bt4g', verifyToken, async (req, res) => {
 app.post('/torrents-api/login', async (req, res) => {
     if (!req.body) return res.sendStatus(400)
     const { username, password } = req.body
+    if (username === undefined || password === undefined)
+        return res.sendStatus(400)
     const passwordsMatch = await bcrypt
         .compare(password, users[username])
         .catch(() => false)
@@ -95,6 +102,8 @@ app.get('/torrents-api/user', verifyToken, (req, res) => {
 app.post('/torrents-api/add-torrent', verifyToken, async (req, res) => {
     if (!req.body) return res.sendStatus(400)
     const { magnet, downloadDir } = req.body
+    if (magnet === undefined || downloadDir === undefined)
+        return res.sendStatus(400)
     const transmission = new Transmission({
         host: TRANSMISSION_SERVER,
         port: 443,
@@ -103,9 +112,11 @@ app.post('/torrents-api/add-torrent', verifyToken, async (req, res) => {
         ssl: true,
     })
 
-    const addRes = await transmission.addUrl(magnet, {
-        'download-dir': downloadDir,
-    })
+    const addRes = await transmission
+        .addUrl(magnet, {
+            'download-dir': downloadDir,
+        })
+        .catch(() => ({ error: 'Failed to add torrent' }))
     res.json(addRes)
 })
 
