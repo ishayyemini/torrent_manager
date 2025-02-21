@@ -1,9 +1,12 @@
 import {
+    Backdrop,
     Box,
     Button,
     Card,
+    CircularProgress,
     DialogTitle,
     FormGroup,
+    Snackbar,
     TextField,
 } from '@mui/material'
 import { FormEventHandler, useCallback, useState } from 'react'
@@ -17,11 +20,22 @@ interface LoginProps {
 function Login({ afterSignIn }: LoginProps) {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
+    const [loading, toggleLoading] = useState(false)
+    const [snack, setSnack] = useState('')
 
     const onSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
         (e) => {
             e.preventDefault()
-            API.login(username, password).then(() => afterSignIn())
+            toggleLoading(true)
+            API.login(username, password)
+                .then(() => {
+                    toggleLoading(false)
+                    afterSignIn()
+                })
+                .catch((err) => {
+                    toggleLoading(false)
+                    setSnack(err.message)
+                })
         },
         [afterSignIn, password, username],
     )
@@ -50,6 +64,23 @@ function Login({ afterSignIn }: LoginProps) {
                     </form>
                 </Box>
             </Card>
+
+            <Backdrop
+                sx={(theme) => ({
+                    color: '#fff',
+                    zIndex: theme.zIndex.drawer + 1,
+                })}
+                open={loading}
+            >
+                <CircularProgress color="inherit" />
+            </Backdrop>
+
+            <Snackbar
+                open={snack !== ''}
+                autoHideDuration={5000}
+                onClose={() => setSnack('')}
+                message={snack}
+            />
         </>
     )
 }

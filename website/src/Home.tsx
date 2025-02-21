@@ -1,17 +1,22 @@
 import { FormEventHandler, useCallback, useState } from 'react'
 import {
+    Backdrop,
     Box,
     Button,
     Card,
     Checkbox,
+    CircularProgress,
     DialogTitle,
     FormControl,
     FormControlLabel,
     FormGroup,
+    IconButton,
     Radio,
     RadioGroup,
+    Snackbar,
     TextField,
 } from '@mui/material'
+import LogoutIcon from '@mui/icons-material/Logout'
 
 import API, { BT4GResItem, Metadata, SearchOptions } from './API/API.ts'
 
@@ -32,62 +37,94 @@ function Home({ logout }: HomeProps) {
         type: 'movie',
         season: undefined,
     })
+    const [loading, toggleLoading] = useState(false)
+    const [snack, setSnack] = useState('')
 
     const onSearchFormSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
         (e) => {
             e.preventDefault()
+            toggleLoading(true)
             API.findTorrents(search, searchOptions)
                 .then((res) => {
-                    setMetadata((oldMetadata) => {
-                        const se =
-                            search.toLowerCase().match(/s\d\de\d\d/i)?.[0] ||
-                            search.toLowerCase().match(/s\d\d/i)?.[0]
-                        oldMetadata.name = (
-                            se ? search.replace(' ' + se, '') : search
-                        ).replace(
-                            /\w\S*/g,
-                            (text) =>
-                                text.charAt(0).toUpperCase() +
-                                text.substring(1).toLowerCase(),
-                        )
-                        oldMetadata.type = se ? 'show' : 'movie'
-                        oldMetadata.season = se
-                            ? parseInt(se.slice(1, 3))
-                            : undefined
+                    if (res.length == 0) {
+                        setMetadata({
+                            name: '',
+                            type: 'movie',
+                            season: undefined,
+                        })
+                        setTorrents(undefined)
+                        setSnack('No torrents found :(')
+                    } else {
+                        setMetadata((oldMetadata) => {
+                            const se =
+                                search
+                                    .toLowerCase()
+                                    .match(/s\d\de\d\d/i)?.[0] ||
+                                search.toLowerCase().match(/s\d\d/i)?.[0]
+                            oldMetadata.name = (
+                                se ? search.replace(' ' + se, '') : search
+                            ).replace(
+                                /\w\S*/g,
+                                (text) =>
+                                    text.charAt(0).toUpperCase() +
+                                    text.substring(1).toLowerCase(),
+                            )
+                            oldMetadata.type = se ? 'show' : 'movie'
+                            oldMetadata.season = se
+                                ? parseInt(se.slice(1, 3))
+                                : undefined
 
-                        return oldMetadata
-                    })
-                    if (res.length == 0) setTorrents(undefined)
-                    else setTorrents(res)
+                            return oldMetadata
+                        })
+                        setTorrents(res)
+                    }
                 })
                 .catch((err) => {
                     console.log(err)
+                    setSnack(err.message)
                     if (err.message == 'Invalid token') logout()
                 })
+                .finally(() => {
+                    toggleLoading(false)
+                })
         },
-        [search, searchOptions],
+        [logout, search, searchOptions],
     )
 
     const onApproveFormSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
         (e) => {
             e.preventDefault()
-            if (selectedMagnet != '')
+            if (selectedMagnet != '') {
+                toggleLoading(true)
                 API.addTorrent(selectedMagnet, metadata)
                     .then(() => {
                         setTorrents(undefined)
                         setSelectedMagnet('')
+                        setSnack('Successfully added torrent! :)')
                     })
                     .catch((err) => {
+                        setSnack(err.message)
                         if (err.message == 'Invalid token') logout()
                     })
-            else setTorrents(undefined)
+                    .finally(() => {
+                        toggleLoading(false)
+                    })
+            } else setTorrents(undefined)
         },
-        [metadata, selectedMagnet],
+        [logout, metadata, selectedMagnet],
     )
 
     return (
         <>
-            <Card>
+            <Card style={{ position: 'relative' }}>
+                <IconButton
+                    title={'Logout'}
+                    onClick={logout}
+                    style={{ position: 'absolute', right: '0' }}
+                >
+                    <LogoutIcon />
+                </IconButton>
+
                 <Box width={'300px'} margin={'12px'}>
                     {torrents == undefined ? (
                         <>
@@ -280,6 +317,23 @@ function Home({ logout }: HomeProps) {
                     )}
                 </Box>
             </Card>
+
+            <Backdrop
+                sx={(theme) => ({
+                    color: '#fff',
+                    zIndex: theme.zIndex.drawer + 1,
+                })}
+                open={loading}
+            >
+                <CircularProgress color="inherit" />
+            </Backdrop>
+
+            <Snackbar
+                open={snack !== ''}
+                autoHideDuration={5000}
+                onClose={() => setSnack('')}
+                message={snack}
+            />
         </>
     )
 }

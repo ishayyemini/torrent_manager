@@ -18,7 +18,12 @@ function App() {
     return (
         <>
             {loggedIn ? (
-                <Home logout={() => toggleLoggedIn(false)} />
+                <Home
+                    logout={() => {
+                        localStorage.removeItem('token')
+                        toggleLoggedIn(false)
+                    }}
+                />
             ) : (
                 <Login afterSignIn={() => toggleLoggedIn(true)} />
             )}
