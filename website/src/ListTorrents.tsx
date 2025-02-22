@@ -6,6 +6,7 @@ import {
     LinearProgress,
     Typography,
     Divider,
+    DialogTitle,
 } from '@mui/material'
 
 import API, { Torrent } from './API/API.ts'
@@ -89,7 +90,11 @@ function ListTorrents() {
 
     return (
         <Box>
+            <DialogTitle>Current Torrents</DialogTitle>
+
             <List>
+                {torrents.length == 0 && <Box>No torrents added</Box>}
+
                 {torrents.map((torrent: Torrent) => (
                     <Fragment key={torrent.id}>
                         <ListItem>
