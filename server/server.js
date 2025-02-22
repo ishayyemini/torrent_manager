@@ -21,7 +21,32 @@ const port = 3000
 app.use(cors())
 app.use(bodyParser.json())
 
-function verifyToken(req, res, next) {
+const transmission = new Transmission({
+    host: TRANSMISSION_SERVER,
+    port: 443,
+    username: TRANSMISSION_USERNAME,
+    password: TRANSMISSION_PASSWORD,
+    ssl: true,
+})
+
+const neededFields = [
+    'activityDate',
+    'addedDate',
+    'doneDate',
+    'downloadDir',
+    'eta',
+    'id',
+    'isFinished',
+    'leftUntilDone',
+    'name',
+    'percentDone',
+    'rateDownload',
+    'rateUpload',
+    'status',
+    'totalSize',
+]
+
+async function verifyToken(req, res, next) {
     const token = req.header('Authorization')
     if (!token) return res.status(401).json({ error: 'Access denied' })
     try {
@@ -54,13 +79,6 @@ app.get('/torrents-api/bt4g', verifyToken, async (req, res) => {
         parser.parse(await bt4gRes.text())?.rss?.channel?.item ?? []
     ).filter((item) => item.description.includes('<br>Movie<br>'))
 
-    const transmission = new Transmission({
-        host: TRANSMISSION_SERVER,
-        port: 443,
-        username: TRANSMISSION_USERNAME,
-        password: TRANSMISSION_PASSWORD,
-        ssl: true,
-    })
     const alreadyAdded = await transmission
         .get(undefined, ['magnetLink'])
         .then((res) => res.torrents.map((item) => item.magnetLink))
@@ -99,19 +117,27 @@ app.get('/torrents-api/user', verifyToken, (req, res) => {
     res.json({ username: req.username })
 })
 
+app.get('/torrents-api/list-torrents', verifyToken, (req, res) => {
+    transmission
+        .all()
+        .then(({ torrents }) => {
+            torrents = torrents.map((item) =>
+                Object.fromEntries(
+                    Object.entries(item).filter(([key]) =>
+                        neededFields.includes(key),
+                    ),
+                ),
+            )
+            res.status(200).json({ torrents })
+        })
+        .catch(() => res.status(404).json({ error: 'Could not find torrents' }))
+})
+
 app.post('/torrents-api/add-torrent', verifyToken, async (req, res) => {
     if (!req.body) return res.sendStatus(400)
     const { magnet, downloadDir } = req.body
     if (magnet === undefined || downloadDir === undefined)
         return res.sendStatus(400)
-    const transmission = new Transmission({
-        host: TRANSMISSION_SERVER,
-        port: 443,
-        username: TRANSMISSION_USERNAME,
-        password: TRANSMISSION_PASSWORD,
-        ssl: true,
-    })
-
     const addRes = await transmission
         .addUrl(magnet, {
             'download-dir': downloadDir,

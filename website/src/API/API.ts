@@ -20,6 +20,23 @@ export interface Metadata {
     season?: number
 }
 
+export interface Torrent {
+    activityDate: number
+    addedDate: number
+    doneDate: number
+    downloadDir: string
+    eta: number
+    id: number
+    isFinished: number
+    leftUntilDone: number
+    name: string
+    percentDone: number
+    rateDownload: number
+    rateUpload: number
+    status: number
+    totalSize: number
+}
+
 class API {
     static async login(username: string, password: string) {
         const res = await fetch(JELLYFIN_SERVER + '/torrents-api/login', {
@@ -106,6 +123,23 @@ class API {
         if (res.status != 200)
             throw new Error(await res.json().then((x) => x.error))
         return await res.json()
+    }
+
+    static async listTorrents() {
+        const token = localStorage.getItem('token')
+        if (!token) throw new Error('No token')
+        const res = await fetch(
+            'http://localhost:3000/torrents-api/list-torrents',
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: token,
+                },
+            },
+        )
+        if (res.status != 200)
+            throw new Error(await res.json().then((x) => x.error))
+        return (await res.json()) as { torrents: Torrent[] }
     }
 }
 
