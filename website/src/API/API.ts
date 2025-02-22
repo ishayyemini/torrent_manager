@@ -129,7 +129,7 @@ class API {
         const token = localStorage.getItem('token')
         if (!token) throw new Error('No token')
         const res = await fetch(
-            'http://localhost:3000/torrents-api/list-torrents',
+            JELLYFIN_SERVER + '/torrents-api/list-torrents',
             {
                 headers: {
                     'Content-Type': 'application/json',
