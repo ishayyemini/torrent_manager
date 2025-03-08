@@ -17,10 +17,10 @@ app.use(bodyParser.json())
 
 const transmission = new Transmission({
     host: process.env.TRANSMISSION_SERVER,
-    port: 443,
+    port: process.env.NODE_ENV === 'production' ? 80 : 443,
     username: process.env.TRANSMISSION_USERNAME,
     password: process.env.TRANSMISSION_PASSWORD,
-    ssl: true,
+    ssl: process.env.NODE_ENV !== 'production',
 })
 
 const neededFields = [
