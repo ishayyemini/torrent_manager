@@ -170,6 +170,24 @@ app.post('/torrents-api/add-torrent', verifyToken, async (req, res) => {
     res.json(addRes)
 })
 
+app.get('/torrents-api/search-show', verifyToken, async (req, res) => {
+    const { term } = req.query
+
+    const sonarrRes = await fetch(
+        process.env.SONARR_SERVER +
+            '/api/v3/series/lookup?' +
+            new URLSearchParams({ term, apikey: process.env.SONARR_API_TOKEN }),
+    )
+        .then(async (res) => res.json())
+        .catch((err) => {
+            console.error(err)
+            return { error: 'Failed to search' }
+        })
+    if (sonarrRes.error) return res.status(404).json({ error: sonarrRes.error })
+
+    return res.status(200).json(sonarrRes ?? [])
+})
+
 app.listen(port, () => {
     console.log(`[server]: Server is running at http://localhost:${port}`)
 })

@@ -9,10 +9,11 @@ import {
     Tab,
     Tabs,
 } from '@mui/material'
-import { Logout, ListAlt, Search } from '@mui/icons-material'
+import { Logout, ListAlt, Search, TravelExplore } from '@mui/icons-material'
 
 import SearchTorrents from './SearchTorrents.tsx'
 import ListTorrents from './ListTorrents.tsx'
+import NewSearch from './NewSearch.tsx'
 
 interface HomeProps {
     logout: () => void
@@ -37,6 +38,7 @@ function Home({ logout }: HomeProps) {
                 <Box width={'300px'} margin={'12px'}>
                     <Tabs value={tab} onChange={(_, value) => setTab(value)}>
                         <Tab icon={<Search />} />
+                        <Tab icon={<TravelExplore />} />
                         <Tab icon={<ListAlt />} />
                     </Tabs>
 
@@ -48,7 +50,15 @@ function Home({ logout }: HomeProps) {
                         />
                     )}
 
-                    {tab === 1 && <ListTorrents />}
+                    {tab === 1 && (
+                        <NewSearch
+                            logout={logout}
+                            toggleLoading={toggleLoading}
+                            setSnack={setSnack}
+                        />
+                    )}
+
+                    {tab === 2 && <ListTorrents />}
                 </Box>
             </Card>
 

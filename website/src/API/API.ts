@@ -35,6 +35,16 @@ export interface Torrent {
     totalSize: number
 }
 
+export interface ShowItem {
+    added: string
+    overview: string
+    path?: string
+    remotePoster: string
+    title: string
+    tvdbId: number
+    year: number
+}
+
 class API {
     static async login(username: string, password: string) {
         const res = await fetch(import.meta.env.VITE_API_ENDPOINT + '/login', {
@@ -138,6 +148,21 @@ class API {
         if (res.status != 200)
             throw new Error(await res.json().then((x) => x.error))
         return (await res.json()) as { torrents: Torrent[] }
+    }
+
+    static async searchShow(searchTerm: string) {
+        const token = localStorage.getItem('token')
+        if (!token) throw new Error('No token')
+        const res = await fetch(
+            import.meta.env.VITE_API_ENDPOINT +
+                '/search-show' +
+                '?' +
+                new URLSearchParams({ term: searchTerm }),
+            { mode: 'cors', headers: { Authorization: token } },
+        )
+        if (res.status != 200)
+            throw new Error(await res.json().then((x) => x.error))
+        return ((await res.json()) ?? []) as ShowItem[]
     }
 }
 
