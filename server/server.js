@@ -1,12 +1,13 @@
-const express = require('express')
-const cors = require('cors')
-const bodyParser = require('body-parser')
-const { XMLParser } = require('fast-xml-parser')
-const Transmission = require('transmission-promise')
-const jwt = require('jsonwebtoken')
+import express from 'express'
+import cors from 'cors'
+import bodyParser from 'body-parser'
+import { XMLParser } from 'fast-xml-parser'
+import Transmission from 'transmission-promise'
+import jwt from 'jsonwebtoken'
+import dotenv from 'dotenv'
+import { Jellyfin } from '@jellyfin/sdk'
 
-require('dotenv').config({ path: './.env' })
-const { Jellyfin } = require('@jellyfin/sdk')
+dotenv.config({ path: './.env' })
 
 const app = express()
 const port = 3000
