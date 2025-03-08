@@ -124,7 +124,10 @@ app.get('/torrents-api/list-torrents', verifyToken, (req, res) => {
             )
             res.status(200).json({ torrents })
         })
-        .catch(() => res.status(404).json({ error: 'Could not find torrents' }))
+        .catch((err) => {
+            console.error(err)
+            res.status(404).json({ error: 'Could not find torrents' })
+        })
 })
 
 app.post('/torrents-api/add-torrent', verifyToken, async (req, res) => {
