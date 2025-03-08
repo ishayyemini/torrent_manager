@@ -2,18 +2,43 @@ const express = require('express')
 const cors = require('cors')
 const bodyParser = require('body-parser')
 const { XMLParser } = require('fast-xml-parser')
-const bcrypt = require('bcrypt')
 const Transmission = require('transmission-promise')
 const jwt = require('jsonwebtoken')
 
 require('dotenv').config({ path: './.env' })
-const users = require('../users.json')
+const { Jellyfin } = require('@jellyfin/sdk')
 
 const app = express()
 const port = 3000
 
 app.use(cors())
 app.use(bodyParser.json())
+const jellyfin = new Jellyfin({
+    clientInfo: {
+        name: 'torrent_manager',
+        version: '1.0.0',
+    },
+    deviceInfo: {
+        name: 'web_server',
+        id: 'jf94389dxj2q3x0sd3',
+    },
+})
+
+async function getJellyfin(username, password) {
+    const servers = await jellyfin.discovery.getRecommendedServerCandidates(
+        process.env.JELLYFIN_SERVER,
+    )
+    const best = jellyfin.discovery.findBestServer(servers)
+    if (!best) throw new Error('Jellyfin server not found')
+    const API = jellyfin.createApi(best.address)
+    const auth = await API.authenticateUserByName(username, password).catch(
+        (err) => err,
+    )
+    if (auth.status !== 200) throw new Error('Authentication failed')
+    return API
+}
+
+const APIs = {}
 
 const transmission = new Transmission({
     host: process.env.TRANSMISSION_SERVER,
@@ -46,6 +71,8 @@ async function verifyToken(req, res, next) {
     try {
         const decoded = jwt.verify(token, process.env.SESSION_SECRET)
         req.username = decoded.username
+        if (!APIs[req.username])
+            return res.status(401).json({ error: 'Invalid token' })
         next()
     } catch (error) {
         res.status(401).json({ error: 'Invalid token' })
@@ -92,19 +119,18 @@ app.post('/torrents-api/login', async (req, res) => {
     const { username, password } = req.body
     if (username === undefined || password === undefined)
         return res.sendStatus(400)
-    const passwordsMatch = await bcrypt
-        .compare(password, users[username])
-        .catch(() => false)
-    if (!passwordsMatch) {
-        res.status(401)
-        res.json({ error: 'Authentication failed' })
-    } else {
-        const token = jwt.sign({ username }, process.env.SESSION_SECRET, {
-            expiresIn: '12h',
+
+    await getJellyfin(username, password)
+        .then((API) => {
+            APIs[username] = API
+            const token = jwt.sign({ username }, process.env.SESSION_SECRET, {
+                expiresIn: '12h',
+            })
+            res.status(200).json({ token })
         })
-        res.status(200)
-        res.json({ token })
-    }
+        .catch(() => {
+            res.status(401).json({ error: 'Authentication failed' })
+        })
 })
 
 app.get('/torrents-api/user', verifyToken, (req, res) => {
