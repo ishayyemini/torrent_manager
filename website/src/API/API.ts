@@ -45,6 +45,13 @@ export interface ShowItem {
     year: number
 }
 
+export type MonitorType =
+    | 'future'
+    | 'all'
+    | 'latestSeason'
+    | 'firstSeason'
+    | 'pilot'
+
 class API {
     static async login(username: string, password: string) {
         const res = await fetch(import.meta.env.VITE_API_ENDPOINT + '/login', {
@@ -163,6 +170,28 @@ class API {
         if (res.status != 200)
             throw new Error(await res.json().then((x) => x.error))
         return ((await res.json()) ?? []) as ShowItem[]
+    }
+
+    static async addShow(show: ShowItem, monitor: MonitorType) {
+        const token = localStorage.getItem('token')
+        if (!token) throw new Error('No token')
+        const res = await fetch(
+            import.meta.env.VITE_API_ENDPOINT + '/add-show',
+            {
+                mode: 'cors',
+                headers: {
+                    Authorization: token,
+                    'Content-Type': 'application/json',
+                },
+                method: 'post',
+                body: JSON.stringify({
+                    show: JSON.stringify(show),
+                    monitor,
+                }),
+            },
+        )
+        if (res.status != 200)
+            throw new Error(await res.json().then((x) => x.error))
     }
 }
 

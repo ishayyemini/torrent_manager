@@ -9,7 +9,7 @@ import {
     TextField,
     Typography,
 } from '@mui/material'
-import API, { ShowItem } from './API/API.ts'
+import API, { MonitorType, ShowItem } from './API/API.ts'
 import { FormEventHandler, Fragment, useCallback, useState } from 'react'
 
 interface NewSearchProps {
@@ -21,6 +21,7 @@ interface NewSearchProps {
 function NewSearch({ logout, toggleLoading, setSnack }: NewSearchProps) {
     const [search, setSearch] = useState('')
     const [shows, setShows] = useState<ShowItem[] | undefined>()
+    const [monitor, setMonitor] = useState<MonitorType | ''>('')
 
     const onSearchFormSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
         (e) => {
@@ -40,6 +41,25 @@ function NewSearch({ logout, toggleLoading, setSnack }: NewSearchProps) {
                 })
         },
         [logout, search, setSnack, toggleLoading],
+    )
+
+    const addShow = useCallback(
+        (show: ShowItem) => {
+            toggleLoading(true)
+            API.addShow(show, monitor || 'future')
+                .then(() => {
+                    setShows(undefined)
+                })
+                .catch((err) => {
+                    console.log(err)
+                    setSnack(err.message)
+                    if (err.message == 'Invalid token') logout()
+                })
+                .finally(() => {
+                    toggleLoading(false)
+                })
+        },
+        [logout, monitor, setSnack, toggleLoading],
     )
 
     return shows == undefined ? (
@@ -66,31 +86,38 @@ function NewSearch({ logout, toggleLoading, setSnack }: NewSearchProps) {
                 {shows.map((show) => (
                     <Fragment key={show.tvdbId}>
                         <ListItem>
-                            <Box
-                                gap={'10px'}
-                                flexDirection={'row'}
-                                display={'flex'}
-                            >
-                                <Box>
-                                    <img
-                                        src={show.remotePoster}
-                                        alt={show.title + ' poster'}
-                                        width={'70px'}
-                                    />
-                                </Box>
-                                <Box maxWidth={'100%'}>
-                                    <Box maxWidth={'100%'} overflow={'hidden'}>
-                                        <span>
-                                            <b>{show.title}</b> ({show.year})
-                                        </span>
-                                    </Box>
+                            <Button onClick={() => addShow(show)}>
+                                <Box
+                                    gap={'10px'}
+                                    flexDirection={'row'}
+                                    display={'flex'}
+                                    style={{ cursor: 'pointer' }}
+                                >
                                     <Box>
-                                        <Typography fontSize={'0.7em'}>
-                                            {show.overview}
-                                        </Typography>
+                                        <img
+                                            src={show.remotePoster}
+                                            alt={show.title + ' poster'}
+                                            width={'70px'}
+                                        />
+                                    </Box>
+                                    <Box maxWidth={'100%'}>
+                                        <Box
+                                            maxWidth={'100%'}
+                                            overflow={'hidden'}
+                                        >
+                                            <span>
+                                                <b>{show.title}</b> ({show.year}
+                                                )
+                                            </span>
+                                        </Box>
+                                        <Box>
+                                            <Typography fontSize={'0.7em'}>
+                                                {show.overview}
+                                            </Typography>
+                                        </Box>
                                     </Box>
                                 </Box>
-                            </Box>
+                            </Button>
                         </ListItem>
                         <Divider key={show.tvdbId + '_1'} />
                     </Fragment>

@@ -80,6 +80,21 @@ async function verifyToken(req, res, next) {
     }
 }
 
+async function getSonarrTag(username) {
+    const tags = await fetch(process.env.SONARR_SERVER + '/api/v3/tag', {
+        headers: { 'X-Api-Key': process.env.SONARR_API_TOKEN },
+    })
+        .then((res) => res.json())
+        .catch((err) => {
+            console.error(err)
+            return []
+        })
+
+    const index = tags.findIndex((tag) => tag.label === username)
+    if (index >= 0) return tags[index].id
+    else return 1
+}
+
 app.get('/torrents-api', (req, res) => {
     res.send('Express + TypeScript Server')
 })
@@ -186,6 +201,57 @@ app.get('/torrents-api/search-show', verifyToken, async (req, res) => {
     if (sonarrRes.error) return res.status(404).json({ error: sonarrRes.error })
 
     return res.status(200).json(sonarrRes ?? [])
+})
+
+app.post('/torrents-api/add-show', verifyToken, async (req, res) => {
+    const { show, monitor } = req.body
+
+    let parsedShow
+    try {
+        parsedShow = JSON.parse(show)
+    } catch {
+        return res.status(403).json({ error: 'Failed to add show' })
+    }
+
+    if (
+        !['future', 'all', 'latestSeason', 'firstSeason', 'pilot'].includes(
+            monitor,
+        )
+    )
+        return res.status(403).json({ error: 'Failed to add show' })
+
+    const sonarrRes = await fetch(
+        process.env.SONARR_SERVER + '/api/v3/series',
+        {
+            method: 'POST',
+            headers: {
+                'X-Api-Key': process.env.SONARR_API_TOKEN,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                ...parsedShow,
+                tags: [await getSonarrTag(req.username)],
+                rootFolderPath: '/mnt/media/Shows',
+                seasonFolder: true,
+                path: '/mnt/media/Shows/' + parsedShow.folder,
+                qualityProfileId: 1,
+                addOptions: {
+                    monitor,
+                    searchForMissingEpisodes: true,
+                    searchForCutoffUnmetEpisodes: true,
+                },
+            }),
+        },
+    )
+        .then((res) => res.json())
+        .catch((err) => {
+            console.error(err)
+            return { error: 'Failed to add show' }
+        })
+    if (!sonarrRes.id || sonarrRes.error)
+        return res.status(404).json({ error: sonarrRes.error })
+
+    return res.status(200).json({ result: 'ok' })
 })
 
 app.listen(port, () => {
