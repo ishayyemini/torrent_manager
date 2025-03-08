@@ -1,5 +1,3 @@
-import { SHOWS_DIR, MOVIES_DIR, JELLYFIN_SERVER } from '../../../conf.json'
-
 export interface BT4GResItem {
     description: string
     guid: string
@@ -39,14 +37,9 @@ export interface Torrent {
 
 class API {
     static async login(username: string, password: string) {
-        const res = await fetch(JELLYFIN_SERVER + '/torrents-api/login', {
-            body: JSON.stringify({
-                username,
-                password,
-            }),
-            headers: {
-                'Content-Type': 'application/json',
-            },
+        const res = await fetch(import.meta.env.VITE_API_ENDPOINT + '/login', {
+            body: JSON.stringify({ username, password }),
+            headers: { 'Content-Type': 'application/json' },
             method: 'post',
         })
 
@@ -58,7 +51,7 @@ class API {
     static async user(): Promise<{ username: string }> {
         const token = localStorage.getItem('token')
         if (!token) throw new Error('No token')
-        const res = await fetch(JELLYFIN_SERVER + '/torrents-api/user', {
+        const res = await fetch(import.meta.env.VITE_API_ENDPOINT + '/user', {
             headers: {
                 Authorization: token,
             },
@@ -84,8 +77,8 @@ class API {
         const token = localStorage.getItem('token')
         if (!token) throw new Error('No token')
         const res = await fetch(
-            JELLYFIN_SERVER +
-                '/torrents-api/bt4g' +
+            import.meta.env.VITE_API_ENDPOINT +
+                '/bt4g' +
                 '?' +
                 new URLSearchParams({ q: searchTerm }),
             {
@@ -103,23 +96,28 @@ class API {
     static async addTorrent(torrentLink: string, metadata: Metadata) {
         const token = localStorage.getItem('token')
         if (!token) throw new Error('No token')
-        const res = await fetch(JELLYFIN_SERVER + '/torrents-api/add-torrent', {
-            body: JSON.stringify({
-                magnet: torrentLink,
-                downloadDir:
-                    (metadata.type == 'show' ? SHOWS_DIR : MOVIES_DIR) +
-                    '/' +
-                    metadata.name +
-                    (metadata.type == 'show'
-                        ? '/Season ' + metadata.season?.toString()
-                        : ''),
-            }),
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: token,
+        const res = await fetch(
+            import.meta.env.VITE_API_ENDPOINT + '/add-torrent',
+            {
+                body: JSON.stringify({
+                    magnet: torrentLink,
+                    downloadDir:
+                        (metadata.type == 'show'
+                            ? import.meta.env.VITE_SHOWS_DIR
+                            : import.meta.env.VITE_MOVIES_DIR) +
+                        '/' +
+                        metadata.name +
+                        (metadata.type == 'show'
+                            ? '/Season ' + metadata.season?.toString()
+                            : ''),
+                }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: token,
+                },
+                method: 'post',
             },
-            method: 'post',
-        })
+        )
         if (res.status != 200)
             throw new Error(await res.json().then((x) => x.error))
         return await res.json()
@@ -129,7 +127,7 @@ class API {
         const token = localStorage.getItem('token')
         if (!token) throw new Error('No token')
         const res = await fetch(
-            JELLYFIN_SERVER + '/torrents-api/list-torrents',
+            import.meta.env.VITE_API_ENDPOINT + '/list-torrents',
             {
                 headers: {
                     'Content-Type': 'application/json',

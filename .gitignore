@@ -25,6 +25,6 @@ server/node_modules
 *.sln
 *.sw?
 
-website/src/conf.json
-conf.json
+website/.env
+server/.env
 users.json

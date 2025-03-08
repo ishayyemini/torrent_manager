@@ -6,13 +6,7 @@ const bcrypt = require('bcrypt')
 const Transmission = require('transmission-promise')
 const jwt = require('jsonwebtoken')
 
-const {
-    BT4G_SERVER,
-    SESSION_SECRET,
-    TRANSMISSION_SERVER,
-    TRANSMISSION_USERNAME,
-    TRANSMISSION_PASSWORD,
-} = require('../conf.json')
+require('dotenv').config({ path: './.env' })
 const users = require('../users.json')
 
 const app = express()
@@ -22,10 +16,10 @@ app.use(cors())
 app.use(bodyParser.json())
 
 const transmission = new Transmission({
-    host: TRANSMISSION_SERVER,
+    host: process.env.TRANSMISSION_SERVER,
     port: 443,
-    username: TRANSMISSION_USERNAME,
-    password: TRANSMISSION_PASSWORD,
+    username: process.env.TRANSMISSION_USERNAME,
+    password: process.env.TRANSMISSION_PASSWORD,
     ssl: true,
 })
 
@@ -50,7 +44,7 @@ async function verifyToken(req, res, next) {
     const token = req.header('Authorization')
     if (!token) return res.status(401).json({ error: 'Access denied' })
     try {
-        const decoded = jwt.verify(token, SESSION_SECRET)
+        const decoded = jwt.verify(token, process.env.SESSION_SECRET)
         req.username = decoded.username
         next()
     } catch (error) {
@@ -66,7 +60,7 @@ app.get('/torrents-api/bt4g', verifyToken, async (req, res) => {
     const { q } = req.query
 
     const bt4gRes = await fetch(
-        BT4G_SERVER +
+        process.env.BT4G_SERVER +
             '?' +
             new URLSearchParams({ q, page: 'rss', orderby: 'seeders' }),
     ).catch(() => ({ error: 'Failed to fetch torrents' }))
@@ -105,7 +99,7 @@ app.post('/torrents-api/login', async (req, res) => {
         res.status(401)
         res.json({ error: 'Authentication failed' })
     } else {
-        const token = jwt.sign({ username }, SESSION_SECRET, {
+        const token = jwt.sign({ username }, process.env.SESSION_SECRET, {
             expiresIn: '12h',
         })
         res.status(200)
