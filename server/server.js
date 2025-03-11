@@ -106,7 +106,7 @@ app.get('/torrents-api/test/status', (req, res) => {
 app.get('/torrents-api/test/persons', (req, res) => {
     const page = parseInt(req.query.page) || 0
 
-    if ([0, 1, 2].includes(page)) {
+    if (![0, 1, 2].includes(page)) {
         return res.status(404).json({ error: 'Not Found' })
     }
 
