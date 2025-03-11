@@ -99,6 +99,29 @@ app.get('/torrents-api', (req, res) => {
     res.send('Express + TypeScript Server')
 })
 
+app.get('/torrents-api/test/status', (req, res) => {
+    res.json({ status: 'ok!' })
+})
+
+app.get('/torrents-api/test/persons', (req, res) => {
+    const page = parseInt(req.query.page) || 0
+
+    if ([0, 1, 2].includes(page)) {
+        return res.status(404).json({ error: 'Not Found' })
+    }
+
+    const x = [
+        { age: 10, gender: 'male', id: 3424 },
+        { age: 23, gender: 'male', id: 323 },
+        { age: 67, gender: 'female', id: 3434424 },
+        { age: 11, gender: 'female', id: 123 },
+        { age: 50, gender: 'female', id: 547 },
+        { age: 11, gender: 'male', id: 5645 },
+    ]
+
+    return res.status(200).json(x.slice(page * 2, page * 2 + 2))
+})
+
 app.get('/torrents-api/bt4g', verifyToken, async (req, res) => {
     const { q } = req.query
 
